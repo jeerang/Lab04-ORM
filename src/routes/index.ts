@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bookRoutes from "./bookRoutes";
 import authorRoutes from "./authorRoutes";
-import historyRoutes from "./historyRoutes";
+import historyRoutes from "./borrowItemRoutes";
 import memberRoutes from "./memberRoutes";
 
 const router = Router();

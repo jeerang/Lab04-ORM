@@ -52,4 +52,37 @@ router.get("/search", async (req: Request, res: Response) => {
   res.json(result);
 });
 
+router.get("/by-name", async (req: Request, res: Response) => {
+  const firstName = req.query.firstName as string;
+  const lastName = req.query.lastName as string;
+
+  if (!firstName && !lastName) {
+    return res.status(400).json({ message: "firstName or lastName query parameter is required" });
+  }
+
+  const query: Record<string, any> = {};
+  if (firstName) query.firstName = firstName;
+  if (lastName) query.lastName = lastName;
+
+  const members = await memberService.getAllMembers(query);
+  if (members.length === 0) {
+    return res.status(404).json({ message: "No members found with the given name" });
+  }
+  res.json(members);
+});
+
+router.get("/by-code", async (req: Request, res: Response) => {
+  const memberCode = req.query.memberCode as string;
+
+  if (!memberCode) {
+    return res.status(400).json({ message: "memberCode query parameter is required" });
+  }
+
+  const members = await memberService.getAllMembers({ memberCode });
+  if (members.length === 0) {
+    return res.status(404).json({ message: "No member found with the given memberCode" });
+  }
+  res.json(members);
+});
+
 export default router;
