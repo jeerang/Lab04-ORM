@@ -35,7 +35,7 @@ export class MemberRepository {
     const options = mapQueryToPrismaOptionsWithKeywordSearchWithoutPagination(
       query,
       keyword,
-      ["memberNo", "firstName", "lastName", "mobile"]
+      ["memberCode", "firstName", "lastName", "phone"]
     );
     return prisma.member.count(options);
   }
@@ -49,7 +49,7 @@ export class MemberRepository {
     const options = mapQueryToPrismaOptionsWithKeywordSearch(
       query,
       keyword,
-      ["memberNo", "firstName", "lastName", "mobile"],
+      ["memberCode", "firstName", "lastName", "phone"],
       page,
       limit
     );

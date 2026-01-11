@@ -34,7 +34,7 @@ export class AuthorRepository {
     const options = mapQueryToPrismaOptionsWithKeywordSearchWithoutPagination(
       query,
       keyword,
-      ["firstName", "lastName", "agency"]
+      ["firstName", "lastName", "affiliation"]
     );
     return prisma.author.count(options);
   }
@@ -48,7 +48,7 @@ export class AuthorRepository {
     const options = mapQueryToPrismaOptionsWithKeywordSearch(
       query,
       keyword,
-      ["firstName", "lastName", "agency"],
+      ["firstName", "lastName", "affiliation"],
       page,
       limit
     );

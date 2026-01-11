@@ -34,7 +34,7 @@ export class BookRepository {
     const options = mapQueryToPrismaOptionsWithKeywordSearch(
       query,
       keyword,
-      ["name", "group"],
+      ["title", "category"],
       page,
       limit
     );
@@ -53,7 +53,7 @@ export class BookRepository {
     const options = mapQueryToPrismaOptionsWithKeywordSearchWithoutPagination(
       query,
       keyword,
-      ["name", "group"]
+      ["title", "category"]
     );
     return prisma.book.count(options);
   }
@@ -66,25 +66,25 @@ export class BookRepository {
     const options = mapQueryWithKeywordSearchAndRelations(
       keyword,
       {
-        directFields: ["name", "group"],
+        directFields: ["title", "category"],
         relations: {
           author: {
             fields: ["firstName", "lastName"],
           },
-          histories: {
+          borrowItems: {
             useMany: true,
             nestedRelation: {
-              name: "member",
-              fields: ["firstName", "lastName"],
+              name: "transaction",
+              fields: ["createdAt"],
             },
           },
         },
       },
       {
         author: true,
-        histories: {
+        borrowItems: {
           include: {
-            member: true,
+            transaction: true,
           },
         },
       },
@@ -97,16 +97,16 @@ export class BookRepository {
 
   async countWithKeywordWithRelations(keyword: string): Promise<number> {
     const where = buildKeywordSearchWhereWithRelations(keyword, {
-      directFields: ["name", "group"],
+      directFields: ["title", "category"],
       relations: {
         author: {
           fields: ["firstName", "lastName"],
         },
-        histories: {
+        borrowItems: {
           useMany: true,
           nestedRelation: {
-            name: "member",
-            fields: ["firstName", "lastName"],
+            name: "transaction",
+            fields: ["createdAt"],
           },
         },
       },
