@@ -3,85 +3,30 @@ import { bookService } from "../services/BookService";
 
 const router = Router();
 
+/**
+ * GET /books?keyword=xxx&page=1&limit=10
+ * ค้นหาหนังสือด้วย keyword พร้อม pagination
+ * ค้นหาได้จาก: ชื่อหนังสือ, หมวดหนังสือ, ชื่อผู้แต่ง, ชื่อผู้ยืม
+ * ถ้าไม่ส่ง keyword จะแสดงหนังสือทั้งหมด
+ */
 router.get("/", async (req: Request, res: Response) => {
-  const books = await bookService.getAllBooks(req.query as Record<string, any>);
-  if (books.length === 0) {
-    return res.status(404).json({ message: "No books found" });
-  }
-  res.json(books);
-});
-
-router.get("/paginated", async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-
-  const result = await bookService.getAllBoooksWithPagination(
-    page,
-    limit,
-    req.query as Record<string, any>
-  );
-
-  if (result.data.length === 0) {
-    return res.status(404).json({ message: "No books found" });
-  }
-  res.setHeader("x-total-count", result.total.toString());
-  res.json(result);
-});
-
-router.get("/search", async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const keyword = (req.query.keyword as string) || "";
 
-  const result =
-    await bookService.getAllBoooksWithPaginationAndKeywordByUsingOr(
-      page,
-      limit,
-      keyword,
-      req.query as Record<string, any>
-    );
-
-  if (result.data.length === 0) {
-    return res.status(404).json({ message: "No books found" });
-  }
-  res.setHeader("x-total-count", result.total.toString());
-  res.json(result);
-});
-
-router.get("/by-title", async (req: Request, res: Response) => {
-  const title = req.query.title as string;
-  if (!title) {
-    return res.status(400).json({ message: "title query parameter is required" });
-  }
-
-  const books = await bookService.getAllBooks({ title });
-  if (books.length === 0) {
-    return res.status(404).json({ message: "No books found with the given title" });
-  }
-  res.json(books);
-});
-
-router.get("/search-with-relations", async (req: Request, res: Response) => {
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const keyword = (req.query.keyword as string) || "";
-
-  if (!keyword) {
-    return res.status(400).json({ message: "Keyword is required" });
-  }
-
-  const result = await bookService.searchBooksWithRelations(
-    keyword,
-    page,
-    limit
-  );
+  const result = await bookService.searchBooksAdvanced(keyword, page, limit);
 
   if (result.data.length === 0) {
     return res.status(404).json({ message: "No books found" });
   }
 
   res.setHeader("x-total-count", result.total.toString());
-  res.json(result);
+  res.setHeader("x-total-pages", result.totalPages.toString());
+  res.json({
+    success: true,
+    message: "Books retrieved successfully",
+    ...result,
+  });
 });
 
 export default router;

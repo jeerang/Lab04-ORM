@@ -41,8 +41,38 @@ export class BookService {
 
     return { data, total, page, limit };
   }
+
+  /**
+   * ค้นหาหนังสือด้วย keyword พร้อม pagination
+   * ค้นหาได้จาก: ชื่อหนังสือ, หมวดหนังสือ, ชื่อผู้แต่ง, ชื่อผู้ยืม
+   */
+  async searchBooksAdvanced(
+    keyword: string,
+    page: number,
+    limit: number
+  ): Promise<{
+    data: any[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const total = await this.bookRepository.countBooksWithKeyword(keyword);
+    const data = await this.bookRepository.searchBooksWithKeywordAndPagination(
+      keyword,
+      page,
+      limit
+    );
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 }
 
 const bookRepository = new BookRepository();
 export const bookService = new BookService(bookRepository);
-
