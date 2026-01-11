@@ -118,4 +118,129 @@ export class BookRepository {
   async create(data: Book): Promise<Book> {
     return prisma.book.create({ data });
   }
+
+  /**
+   * ค้นหาหนังสือด้วย keyword พร้อม pagination
+   * ค้นหาได้จาก: ชื่อหนังสือ, หมวดหนังสือ, ชื่อผู้แต่ง, ชื่อผู้ยืม
+   */
+  async searchBooksWithKeywordAndPagination(
+    keyword: string,
+    page: number,
+    limit: number
+  ): Promise<any[]> {
+    const skip = (page - 1) * limit;
+
+    // สร้าง where condition สำหรับค้นหาจากหลาย field
+    const whereCondition = keyword
+      ? {
+          OR: [
+            // ค้นหาจากชื่อหนังสือ
+            { title: { contains: keyword, mode: "insensitive" as const } },
+            // ค้นหาจากหมวดหนังสือ
+            { category: { contains: keyword, mode: "insensitive" as const } },
+            // ค้นหาจากชื่อผู้แต่ง (firstName หรือ lastName)
+            {
+              author: {
+                OR: [
+                  { firstName: { contains: keyword, mode: "insensitive" as const } },
+                  { lastName: { contains: keyword, mode: "insensitive" as const } },
+                ],
+              },
+            },
+            // ค้นหาจากชื่อผู้ยืม (ผ่าน borrowItems -> transaction -> member)
+            {
+              borrowItems: {
+                some: {
+                  transaction: {
+                    member: {
+                      OR: [
+                        { firstName: { contains: keyword, mode: "insensitive" as const } },
+                        { lastName: { contains: keyword, mode: "insensitive" as const } },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        }
+      : {};
+
+    return prisma.book.findMany({
+      where: whereCondition,
+      include: {
+        author: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            affiliation: true,
+          },
+        },
+        borrowItems: {
+          include: {
+            transaction: {
+              include: {
+                member: {
+                  select: {
+                    id: true,
+                    memberCode: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+      skip,
+      take: limit,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+  /**
+   * นับจำนวนหนังสือที่ค้นหาด้วย keyword
+   * ค้นหาได้จาก: ชื่อหนังสือ, หมวดหนังสือ, ชื่อผู้แต่ง, ชื่อผู้ยืม
+   */
+  async countBooksWithKeyword(keyword: string): Promise<number> {
+    const whereCondition = keyword
+      ? {
+          OR: [
+            { title: { contains: keyword, mode: "insensitive" as const } },
+            { category: { contains: keyword, mode: "insensitive" as const } },
+            {
+              author: {
+                OR: [
+                  { firstName: { contains: keyword, mode: "insensitive" as const } },
+                  { lastName: { contains: keyword, mode: "insensitive" as const } },
+                ],
+              },
+            },
+            {
+              borrowItems: {
+                some: {
+                  transaction: {
+                    member: {
+                      OR: [
+                        { firstName: { contains: keyword, mode: "insensitive" as const } },
+                        { lastName: { contains: keyword, mode: "insensitive" as const } },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        }
+      : {};
+
+    return prisma.book.count({ where: whereCondition });
+  }
 }
